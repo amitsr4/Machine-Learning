@@ -20,9 +20,10 @@ def kmeans(X, k, t):
         if np.array_equal(centroids, new_centroids):
             break
         centroids = new_centroids
-    return clusters
+    return clusters.reshape(-1, 1)
 
-#amit
+
+
 
 def simple_test():
     # load sample data (this is just an example code, don't forget the other part)
@@ -32,7 +33,7 @@ def simple_test():
 
     # run K-means
     c = kmeans(X, k=10, t=10)
-
+    print(c);
     assert isinstance(c, np.ndarray), "The output of the function softsvm should be a numpy array"
     assert c.shape[0] == m and c.shape[1] == 1, f"The shape of the output should be ({m}, 1)"
 
