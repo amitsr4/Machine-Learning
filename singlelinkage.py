@@ -1,4 +1,7 @@
+import math
+
 import numpy as np
+from scipy.spatial import distance
 
 
 def singlelinkage(X, k):
@@ -7,76 +10,51 @@ def singlelinkage(X, k):
     :param k: the number of clusters
     :return: a column vector of length m, where C(i) ∈ {1, . . . , k} is the identity of the cluster in which x_i has been assigned.
     """
-    # m, d = X.shape
-    # distances = np.zeros((m, m))
-    # for i in range(m):
-    #     for j in range(i, m):
-    #         distances[i, j] = np.linalg.norm(X[i] - X[j])
-    #         distances[j, i] = distances[i, j]
-    # clusters = np.arange(m)
-    # for _ in range(m - k):
-    #     i, j = np.unravel_index(np.argmin(distances), distances.shape)
-    #     clusters[clusters == j] = i
-    #     distances[i, :] = np.minimum(distances[i, :], distances[j, :])
-    #     distances[:, i] = distances[i, :]
-    #     distances[j, :] = np.inf
-    #     distances[:, j] = np.inf
-    # return clusters.reshape(-1,1)
 
-    # get the number of examples and coordinates
-    m, d = X.shape
-    # calculate pairwise Euclidean distances
-    distances = np.linalg.norm(X[:, np.newaxis] - X, axis=-1)
-    # set the diagonal elements to infinity
-    np.fill_diagonal(distances, np.inf)
-    # initialize each point as its own cluster
-    clusters = np.arange(m)
-    for _ in range(m - k):
-        # find the closest pair of clusters
-        i, j = np.unravel_index(np.argmin(distances), distances.shape)
-        # merge the closest pair of clusters
-        clusters[clusters == j] = clusters[i]
-        # update the distance matrix
-        distances = np.minimum(distances, np.minimum(distances[j, :], distances[:, j]))
-        distances[j, :] = np.inf
-        distances[:, j] = np.inf
-    # assign a label to each cluster
-    _, labels = np.unique(clusters, return_inverse=True)
-    return labels.reshape(-1, 1) + 1
-#TODO FIX !
-    # m, d = X.shape
-    # C = np.arange(m).reshape(-1, 1) # Create initial cluster assignments
-    # distances = np.sqrt(np.sum((X[:, None] - X)**2, axis=-1)) # calculate pairwise distances
-    # while len(np.unique(C)) > k:
-    #     C_repeated = np.repeat(C, m).reshape(m, m)
-    #     C_tiled = np.tile(C, (m, 1))
-    #     C_mask = (C_repeated.astype(int) != C_tiled.astype(int)) & (C_repeated.astype(int) != C_tiled.T.astype(int))
-    #     distances_mask = np.ma.array(distances, mask=C_mask)
-    #     min_distance = np.min(distances_mask)
-    #     i, j = np.where(distances == min_distance)
-    #     if i.size and j.size:
-    #         i, j = i[0], j[0]
-    #         C[C == C[j]] = C[i] # merge the two closest clusters
-    #     else:
-    #         break
-    # return C
+    # Initialize each example as its own cluster
+    clusters = [X[i:i+1] for i in range(X.shape[0])]
+    while len(clusters) > k:
+        closest_distance = np.inf
+        clust_1 = clust_2 = None
+        for i, cluster1 in enumerate(clusters[:len(clusters) - 1]):
+            for j, cluster2 in enumerate(clusters[i + 1:]):
+                # Calculate pairwise distances between all points in the current and prospective clusters
+                dist = np.min(np.min(np.linalg.norm(cluster1[:, None] - cluster2, axis=2)))
+                if dist < closest_distance:
+                    closest_distance = dist
+                    clust_1 = i
+                    clust_2 = j + i + 1
+        # Merge the closest pair of clusters using np.concatenate
+        clusters[clust_2] = np.concatenate((clusters[clust_2], clusters[clust_1]))
+        # Remove the merged cluster
+        clusters.pop(clust_1)
+        if len(clusters) == k:
+            break
+    labels = np.zeros(X.shape[0])
+    for i, cluster in enumerate(clusters):
+        indices = np.concatenate(cluster)
+        for j in range(indices.shape[0]):
+            labels[indices[j]] = i + 1
+    return labels.reshape(-1, 1)
+
+
+
 
 def simple_test():
-
     # load sample data (this is just an example code, don't forget the other part)
     data = np.load('mnist_all.npz')
     train0 = data['train0']
     train1 = data['train1']
-    train3 = data['train3']
     train2 = data['train2']
-    train5 = data['train5']
+    train3 = data['train3']
     train4 = data['train4']
+    train5 = data['train5']
     train6 = data['train6']
     train7 = data['train7']
     train8 = data['train8']
     train9 = data['train9']
     indices0 = np.random.permutation(train0.shape[0])
-    train0= train0[indices0[:30], :]
+    train0 = train0[indices0[:30], :]
     indices1 = np.random.permutation(train1.shape[0])
     train1 = train1[indices1[:30], :]
     indices2 = np.random.permutation(train2.shape[0])
@@ -85,16 +63,18 @@ def simple_test():
     train3 = train3[indices3[:30], :]
     indices4 = np.random.permutation(train4.shape[0])
     train4 = train4[indices4[:30], :]
-    X = np.concatenate((train0, train1, train2, train3, train4))
+    indices5 = np.random.permutation(train5.shape[0])
+    train5 = train5[indices5[:30], :]
+    indices6 = np.random.permutation(train6.shape[0])
+    train6 = train6[indices6[:30], :]
+    indices7 = np.random.permutation(train7.shape[0])
+    train7 = train7[indices7[:30], :]
+    indices8 = np.random.permutation(train8.shape[0])
+    train8 = train8[indices8[:30], :]
+    indices9 = np.random.permutation(train9.shape[0])
+    train9 = train9[indices9[:30], :]
 
-
-
-    # indices1 = np.random.permutation(train0.shape[0])
-    # samples1 = train0[indices1[:30], :]
-    # indices2 = np.random.permutation(train1.shape[0])
-    # samples2 = train1[indices2[:30], :]
-    # sample_train0 = np.random.choice(data['train0'][0], size=(30, 784))
-    # sample_train1 = np.random.choice(data['train1'][0], size=(30, 784))
+    X = np.concatenate((train0, train1, train2, train3, train4, train5, train6, train7, train8, train9))
 
     # X = np.concatenate((data['train0'], data['train1']))
     # X = np.concatenate((samples1, samples2))
