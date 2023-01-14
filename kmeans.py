@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import os
 
 
 def kmeans(X, k, t):
@@ -27,7 +26,7 @@ def kmeans(X, k, t):
 
 def task1c():
 
-    # Load the MNIST data file
+    # Load the MNIST data filee
     data = np.load('mnist_all.npz')
     X = np.concatenate((data['train0'], data['train1'], data['train2'], data['train3'], data['train4'], data['train5'],
                         data['train6'], data['train7'], data['train8'], data['train9']))
