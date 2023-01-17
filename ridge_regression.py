@@ -35,6 +35,8 @@ def task2e(best_lambda, training_sizes):
     plt.xticks(training_sizes)
     plt.show()
 
+
+
 def task2():
     # Load data from file
     data = sio.loadmat('regdata.mat')

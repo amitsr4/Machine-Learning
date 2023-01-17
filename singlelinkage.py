@@ -10,34 +10,84 @@ def singlelinkage(X, k):
     :return: a column vector of length m, where C(i) ∈ {1, . . . , k} is the identity of the cluster in which x_i has been assigned.
     """
 
-    # Initialize each example as its own cluster
-    clusters = [X[i:i+1] for i in range(X.shape[0])]
+
+
+    # Initialize the number of samples and clusters
+    # n_samples = X.shape[0]
+    # clusters = [{i} for i in range(n_samples)]
+    #
+    # # Compute the distance matrix
+    # D = np.zeros((n_samples, n_samples))
+    # for i in range(n_samples):
+    #     for j in range(i + 1, n_samples):
+    #         D[i, j] = np.linalg.norm(X[i] - X[j])
+    #         D[j, i] = D[i, j]
+    # print("finish distance matrix")
+    # while len(clusters) > k:
+    #     # Find the two closest clusters
+    #     min_distance = np.inf
+    #     c1, c2 = None, None
+    #     for i in range(len(clusters)):
+    #         print("start loop" +i)
+    #         for j in range(i + 1, len(clusters)):
+    #             ci, cj = clusters[i], clusters[j]
+    #             dist = np.min(D[list(ci)][:, list(cj)])
+    #             if dist < min_distance:
+    #                 min_distance = dist
+    #                 c1, c2 = ci, cj
+    #         print("end loop"+i)
+    #
+    #     # Merge the two closest clusters
+    #     new_cluster = c1.union(c2)
+    #     clusters.remove(c1)
+    #     clusters.remove(c2)
+    #     clusters.append(new_cluster)
+    # print("finish clustering")
+    # cluster_assignments = np.zeros(n_samples)
+    # for i, c in enumerate(clusters):
+    #     for sample in c:
+    #         cluster_assignments[sample] = i
+    #
+    # return cluster_assignments.reshape(-1,1)
+
+    # Initialize the number of samples and clusters
+    n_samples = X.shape[0]
+    clusters = [{i} for i in range(n_samples)]
+
+    # Compute the distance matrix
+    D = np.zeros((n_samples, n_samples))
+    for i in range(n_samples):
+        for j in range(i + 1, n_samples):
+            D[i, j] = np.linalg.norm(X[i]- X[j])
+            D[j, i] = D[i, j]
+
     while len(clusters) > k:
-        closest_distance = np.inf
-        clust_1 = clust_2 = None
-        for i, cluster1 in enumerate(clusters[:len(clusters) - 1]):
-            for j, cluster2 in enumerate(clusters[i + 1:]):
-                # Calculate pairwise distances between all points in the current and prospective clusters
-                dist = np.min(np.min(np.linalg.norm(cluster1[:, None] - cluster2, axis=2)))
-                if dist < closest_distance:
-                    closest_distance = dist
-                    clust_1 = i
-                    clust_2 = j + i + 1
-        # Merge the closest pair of clusters using np.concatenate
-        clusters[clust_2] = np.concatenate((clusters[clust_2], clusters[clust_1]))
-        # Remove the merged cluster
-        clusters.pop(clust_1)
-        if len(clusters) == k:
-            break
-    labels = np.zeros(X.shape[0])
-    for i, cluster in enumerate(clusters):
-        indices = np.concatenate(cluster)
-        for j in range(indices.shape[0]):
-            labels[indices[j]] = i + 1
-    return labels.reshape(-1, 1)
+        # Find the two closest clusters
+        c1, c2 = np.unravel_index(np.argmin(D), D.shape)
+        if c1 > c2:  # because we will delete c2 before c1
+            c1, c2 = c2, c1
+
+        # Merge the two closest clusters
+        new_cluster = clusters[c1].union(clusters[c2])
+        del clusters[c2]
+        del clusters[c1]
+        clusters.append(new_cluster)
+
+        # Update the distance matrix
+        D[c1, :] = np.minimum(D[c1, :], D[c2, :])
+        D[:, c1] = D[c1, :]
+        D[c1 + 1:, c1] = np.inf
+        D[c1, c1 + 1:] = np.inf
+
+    # Create an array to store the cluster assignments for each sample
+    cluster_assignments = np.zeros(n_samples)
+    for i, c in enumerate(clusters):
+        for sample in c:
+            cluster_assignments[sample] = i
+    return cluster_assignments.reshape(-1, 1)
 
 
-def task1d():
+def task1dc(k):
 
     # Load the MNIST data filee
     data = np.load('mnist_all.npz')
@@ -58,7 +108,7 @@ def task1d():
     true_labels = np.array(true_labels)[random_sample]
 
     # Run the k-means algorithm
-    clusters = singlelinkage(sample_data, k=10)
+    clusters = singlelinkage(sample_data, k=k)
 
     # Create a list to store the majority label for each cluster
     majority_labels = []
@@ -101,7 +151,7 @@ def task1d():
 
 
     df = pd.DataFrame(table[1:], columns=table[0])
-    file_name = 'C:\\Users\\97252\Desktop\\Computer Sience\\G\\Introduction to Machine Learning\\Assignment 3\\single_linkage_results.xlsx'
+    file_name = 'C:\\Users\\97252\Desktop\\Computer Sience\\G\\Introduction to Machine Learning\\Assignment 3\\single_linkage_results_for_k='+'{}.xlsx'.format(k)
     df.to_excel(file_name, index=False)
     print(f'The table has been exported to {file_name}')
 
@@ -125,6 +175,7 @@ def task1d():
 
     # Print the classification error
     print("Classification error: {:.2f}%".format(classification_error * 100))
+
 
 
 def simple_test():
@@ -179,5 +230,7 @@ def simple_test():
 if __name__ == '__main__':
     # before submitting, make sure that the function simple_test runs without errors
     # simple_test()
-    task1d()
+    task1dc(10) # for task1d k=10
+    task1dc(6) # for task1e k=6
+
     # here you may add any code that uses the above functions to solve question 2

@@ -24,8 +24,7 @@ def kmeans(X, k, t):
     return clusters.reshape(-1, 1)
 
 
-def task1c():
-
+def task1ce(k):
     # Load the MNIST data filee
     data = np.load('mnist_all.npz')
     X = np.concatenate((data['train0'], data['train1'], data['train2'], data['train3'], data['train4'], data['train5'],
@@ -45,7 +44,7 @@ def task1c():
     true_labels = np.array(true_labels)[random_sample]
 
     # Run the k-means algorithm
-    clusters = kmeans(sample_data, k=10, t=50)
+    clusters = kmeans(sample_data, k=k, t=10)
 
     # Create a list to store the majority label for each cluster
     majority_labels = []
@@ -88,8 +87,7 @@ def task1c():
 
 
     df = pd.DataFrame(table[1:], columns=table[0])
-    file_name = 'C:\\Users\\97252\Desktop\\Computer Sience\\G\\Introduction to Machine Learning\\Assignment 3\\k-means_results.xlsx'
-    # file_name = os.path.join(os.path.expanduser('~'), 'Desktop', 'k-means_results.xlsx')
+    file_name = 'C:\\Users\\97252\Desktop\\Computer Sience\\G\\Introduction to Machine Learning\\Assignment 3\\k-means_results_for_k='+'{}.xlsx'.format(k)
     df.to_excel(file_name, index=False)
     print(f'The table has been exported to {file_name}')
 
@@ -131,6 +129,7 @@ def simple_test():
 if __name__ == '__main__':
     # before submitting, make sure that the function simple_test runs without errors
     # simple_test()
-    task1c()
+    task1ce(10) # for task1 c
+    task1ce(6)  # for task1 e
 
     # here you may add any code that uses the above functions to solve question 2
